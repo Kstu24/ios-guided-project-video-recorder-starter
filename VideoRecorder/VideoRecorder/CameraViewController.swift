@@ -8,6 +8,7 @@
 
 import UIKit
 import AVFoundation
+import AVKit
 
 class CameraViewController: UIViewController {
     
@@ -51,9 +52,14 @@ class CameraViewController: UIViewController {
     
     @IBAction func playRecording(_ sender: UITapGestureRecognizer) {
         guard sender.state == .ended else { return }
-        player.seek(to: CMTime(seconds: 0,
-                               preferredTimescale: 600)) // seconds = Numerator/Denominator, Denominator = 600
-        player.play()
+//        player.seek(to: CMTime(seconds: 0,
+//                               preferredTimescale: 600)) // seconds = Numerator/Denominator, Denominator = 600
+//        player.play()
+        
+        let playerVC = AVPlayerViewController() // USE AVKIT!! Makes view controller for you to play, pause, forward and reverse the video, full screen playback, ect.
+        playerVC.player = player
+        
+        self.present(playerVC, animated: true, completion: nil)
     }
     
     private func setUpCamera() {
