@@ -42,23 +42,43 @@ class CameraViewController: UIViewController {
             
             playerView.frame = topRect
             view.addSubview(playerView)
+            
+            let tapGesture = UITapGestureRecognizer(target: self,
+                                                    action: #selector(playRecording(_:)))
+            playerView.addGestureRecognizer(tapGesture)
         }
+    }
+    
+    @IBAction func playRecording(_ sender: UITapGestureRecognizer) {
+        guard sender.state == .ended else { return }
+        player.seek(to: CMTime(seconds: 0,
+                               preferredTimescale: 600)) // seconds = Numerator/Denominator, Denominator = 600
         player.play()
     }
     
     private func setUpCamera() {
         let camera = bestCamera()
+        let microphone = bestMicrophone()
+        
         
         captureSession.beginConfiguration() // starts configuration
         guard let cameraInput = try? AVCaptureDeviceInput(device: camera) else {
             preconditionFailure("Can't create an input from the camera.")
         }
+        guard let microphoneInput = try? AVCaptureDeviceInput(device: microphone) else {
+            preconditionFailure("Can't create an input from the microphone.")
+        }
         
         guard captureSession.canAddInput(cameraInput) else { // Returns a Boolean value that indicates whether a given input can be added to the session.
-            preconditionFailure("This session can't handle this trype of input: \(cameraInput)")
+            preconditionFailure("This session can't handle this type of input: \(cameraInput)")
+        }
+        
+        guard captureSession.canAddInput(microphoneInput) else {
+            preconditionFailure("This session can't handle this type of input: \(microphoneInput)")
         }
         
         captureSession.addInput(cameraInput) // Adds a given input to the session.
+        captureSession.addInput(microphoneInput)
         
         if captureSession.canSetSessionPreset(.hd1920x1080) {
             captureSession.sessionPreset = .hd1920x1080
@@ -87,6 +107,13 @@ class CameraViewController: UIViewController {
             return device
         }
         preconditionFailure("No cameras on device match the specs that we need.")
+    }
+    
+    private func bestMicrophone() -> AVCaptureDevice {
+        if let device = AVCaptureDevice.default(for: .audio) {
+            return device
+        }
+        preconditionFailure("No microphones on device match the specs that we need.")
     }
     
     override func viewDidAppear(_ animated: Bool) {
@@ -126,10 +153,15 @@ class CameraViewController: UIViewController {
         }
     }
     extension CameraViewController: AVCaptureFileOutputRecordingDelegate {
-        func fileOutput(_ output: AVCaptureFileOutput, didStartRecordingTo fileURL: URL, from connections: [AVCaptureConnection]) {
+        func fileOutput(_ output: AVCaptureFileOutput,
+                        didStartRecordingTo fileURL: URL,
+                        from connections: [AVCaptureConnection]) {
             updateViews()
         }
-        func fileOutput(_ output: AVCaptureFileOutput, didFinishRecordingTo outputFileURL: URL, from connections: [AVCaptureConnection], error: Error?) {
+        func fileOutput(_ output: AVCaptureFileOutput,
+                        didFinishRecordingTo outputFileURL: URL,
+                        from connections: [AVCaptureConnection],
+                        error: Error?) {
             if let error = error {
                 print("Error saving video: \(error)")
             }
