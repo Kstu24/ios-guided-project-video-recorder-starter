@@ -39,7 +39,13 @@ class CameraViewController: UIViewController {
         
         captureSession.addInput(cameraInput) // Adds a given input to the session.
         
+        if captureSession.canSetSessionPreset(.hd1920x1080) {
+            captureSession.sessionPreset = .hd1920x1080
+        }
+        
         captureSession.commitConfiguration() // ends configuration
+        
+        cameraView.session = captureSession
     }
     
     private func bestCamera() -> AVCaptureDevice {
